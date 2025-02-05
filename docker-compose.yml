@@ -1,0 +1,51 @@
+services:
+  web:
+    container_name: "monetizze-web"
+    build: docker/apache
+    working_dir: /var/www/monetizze
+    volumes:
+      # - './container-data/apache-data:/usr/local/apache2/htdocs'
+      - "./app:/var/www/monetizze"
+    links:
+      - php
+    networks:
+      - monetizze-network
+    depends_on:
+      - php
+
+  php:
+    container_name: "monetizze-php"
+    build: docker/php
+    working_dir: /var/www/monetizze
+    volumes:
+      # - './container-data/php-data:/var/www/monetizze'
+      - "./app:/var/www/monetizze"
+    networks:
+      - monetizze-network
+    depends_on:
+      - mysql
+
+  mysql:
+    container_name: "monetizze-mysql"
+    build: docker/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - "./container-data/mysql-data:/var/lib/mysql"
+      - "./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql"
+      # - mysql-data:/var/lib/mysql
+    networks:
+      - monetizze-network
+
+networks:
+  monetizze-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
